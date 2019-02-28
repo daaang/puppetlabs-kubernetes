@@ -330,7 +330,7 @@ class kubernetes (
   Optional[String] $containerd_version         = '1.1.0',
   Optional[String] $docker_package_name        = 'docker-engine',
   Optional[String] $docker_version             = $facts['os']['family'] ? {
-                                                    'Debian' => '17.03.0~ce-0~ubuntu-xenial',
+                                                    'Debian' => "17.03.0~ce-0~debian-${facts['os']['distro']['codename']}",
                                                     'RedHat' => '17.03.1.ce-1.el7.centos',
                                                   },
   Optional[String] $cni_pod_cidr               = undef,
