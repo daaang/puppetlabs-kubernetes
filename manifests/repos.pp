@@ -39,7 +39,7 @@ class kubernetes::repos (
             apt::source { 'docker':
               location => pick($docker_apt_location,'https://apt.dockerproject.org/repo'),
               repos    => pick($docker_apt_repos,'main'),
-              release  => pick($docker_apt_release,"ubuntu-${codename}"),
+              release  => pick($docker_apt_release,"debian-${codename}"),
               key      => {
                 'id'     => pick($docker_key_id,'58118E89F3A912897C070ADBF76221572C52609D'),
                 'source' => pick($docker_key_source,'https://apt.dockerproject.org/gpg'),
