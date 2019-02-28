@@ -13,7 +13,7 @@ define kubernetes::kubeadm_join (
   Optional[String] $discovery_file         = undef,
   Optional[Array] $env                     = undef,
   Optional[Array] $ignore_preflight_errors = undef,
-  Optional[Array] $path                    = undef,
+  Array $path                              = $kubernetes::default_path,
   Boolean $skip_ca_verification            = false,
 ) {
 
@@ -22,7 +22,6 @@ define kubernetes::kubeadm_join (
     /^1.1(0|1)/: {
       $kubeadm_join_flags = kubeadm_join_flags({
         controller_address       => $controller_address,
-        config                   => $config,
         cri_socket               => $cri_socket,
         discovery_file           => $discovery_file,
         discovery_token          => $discovery_token,

@@ -10,6 +10,11 @@
 #   ie api server,
 #   Defaults to  1.10.2
 #
+# [*kubernetes_cluster_name*]
+#   The name of the cluster, for use when multiple clusters are accessed from the same source
+#   Only used by Kubernetes 1.12+
+#   Defaults to "kubernetes"
+#
 # [*kubernetes_package_version*]
 #   The version of the packages the Kubernetes os packages to install
 #   ie kubectl and kubelet
@@ -234,11 +239,13 @@
 #  Defaults to {}
 #
 # [*kubelet_extra_config*]
-#  A hash containing extra configuration data to be serialised with `to_yaml` and appended to Kubelet configuration file for the cluster. Requires DynamicKubeletConfig.
+#  A hash containing extra configuration data to be serialised with `to_yaml` and appended to Kubelet configuration file for the cluster.
+#  Requires DynamicKubeletConfig.
 #  Defaults to {}
 #
 # [*kubelet_extra_arguments*]
-#  A string array to be appended to kubeletExtraArgs in the Kubelet's nodeRegistration configuration. It is applied to both masters and nodes. Use this for critical Kubelet settings such as `pod-infra-container-image` which may be problematic to configure via kubelet_extra_config and DynamicKubeletConfig.
+#  A string array to be appended to kubeletExtraArgs in the Kubelet's nodeRegistration configuration applied to both masters and nodes.
+#  Use this for critical Kubelet settings such as `pod-infra-container-image` which may be problematic to configure via kubelet_extra_config
 #  Defaults to []
 #
 # [*kubernetes_apt_location*]
@@ -313,6 +320,10 @@
 #  A flag to manage required sysctl settings.
 #  Defaults to true
 #
+# [*default_path*]
+#  The path to be used when running kube* commands
+#  Defaults to ['/usr/bin','/bin','/sbin','/usr/local/bin']
+#
 # Authors
 # -------
 #
@@ -322,6 +333,7 @@
 #
 class kubernetes (
   String $kubernetes_version                   = '1.10.2',
+  String $kubernetes_cluster_name              = 'kubernetes',
   String $kubernetes_package_version           = $facts['os']['family'] ? {
                                                     'Debian' => "${kubernetes_version}-00",
                                                     'RedHat' => $kubernetes::kubernetes_version,
@@ -403,6 +415,7 @@ class kubernetes (
   Boolean $manage_sysctl_settings              = true,
   Boolean $create_repos                        = true,
   String $image_repository                     = 'k8s.gcr.io',
+  Array[String] $default_path                  = ['/usr/bin','/bin','/sbin','/usr/local/bin'],
 ){
   if ! $facts['os']['family'] in ['Debian','RedHat'] {
     notify {"The OS family ${facts['os']['family']} is not supported by this module":}
@@ -434,20 +447,20 @@ class kubernetes (
   if $controller {
     include kubernetes::repos
     include kubernetes::packages
-    include kubernetes::config
+    include kubernetes::config::kubeadm
     include kubernetes::service
     include kubernetes::cluster_roles
     include kubernetes::kube_addons
     contain kubernetes::repos
     contain kubernetes::packages
-    contain kubernetes::config
+    contain kubernetes::config::kubeadm
     contain kubernetes::service
     contain kubernetes::cluster_roles
     contain kubernetes::kube_addons
 
     Class['kubernetes::repos']
       -> Class['kubernetes::packages']
-      -> Class['kubernetes::config']
+      -> Class['kubernetes::config::kubeadm']
       -> Class['kubernetes::service']
       -> Class['kubernetes::cluster_roles']
       -> Class['kubernetes::kube_addons']

@@ -1,9 +1,10 @@
-#Calss kubernetes config, populates config files with params to bootstrap cluster
-class kubernetes::config (
+# Class kubernetes config kubeadm, populates kubeadm config file with params to bootstrap cluster
+class kubernetes::config::kubeadm (
   String $config_file = $kubernetes::config_file,
   Boolean $manage_etcd = $kubernetes::manage_etcd,
   String $etcd_install_method = $kubernetes::etcd_install_method,
   String $kubernetes_version  = $kubernetes::kubernetes_version,
+  String $kubernetes_cluster_name  = $kubernetes::kubernetes_cluster_name,
   String $etcd_ca_key = $kubernetes::etcd_ca_key,
   String $etcd_ca_crt = $kubernetes::etcd_ca_crt,
   String $etcdclient_key = $kubernetes::etcdclient_key,
@@ -119,16 +120,14 @@ class kubernetes::config (
   $kubelet_extra_config_yaml = regsubst(to_yaml($kubelet_extra_config), '^---\n', '')
   $kubelet_extra_config_alpha1_yaml = regsubst(to_yaml($kubelet_extra_config_alpha1), '^---\n', '')
 
-  if $kubernetes_version =~ /1.1(0|1)/ {
-    $template = 'alpha1'
-  } else {
-    $template = 'alpha3'
+  $config_version = $kubernetes_version ? {
+    /1.1(0|1)/ => 'v1alpha1',
+    default    => 'v1alpha3',
   }
 
   file { $config_file:
     ensure  => present,
-    content => template("kubernetes/config-${template}.yaml.erb"),
+    content => template("kubernetes/${config_version}/config_kubeadm.yaml.erb"),
     mode    => '0600',
   }
-
 }
